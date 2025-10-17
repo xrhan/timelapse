@@ -16,7 +16,7 @@ footer_text: >
 keywords: diffusion models, flow matching  # add your own keywords or leave empty
 
 lang: en # the language of your site (for example: en, fr, cn, ru, etc.)
-icon: twotrees.jpg  # the emoji used as the favicon (alternatively, provide image name in /assets/img/)
+icon: cat_logo.jpg  # the emoji used as the favicon (alternatively, provide image name in /assets/img/)
 
 url: '' # the base hostname & protocol for your site
 baseurl: / # the subpath of your site, e.g. /blog/

@@ -163,11 +163,11 @@ We show that we can improve both the morphing degree and preserve subject consis
   <h3>Ours <span style="color:#8ECAE6;">SC&uarr;</span> <span style="color:#FFB703;">MD&uarr;</span></h3>
   <div class="two-vids">
     <figure>
-      <video src="/assets/videos/almond.mp4" autoplay loop muted playsinline></video>
+      <video src="assets/videos/almond.mp4" autoplay loop muted playsinline></video>
       <figcaption></figcaption>
     </figure>
     <figure>
-      <video src="/assets/videos/repa_peony.mp4" autoplay loop muted playsinline></video>
+      <video src="assets/videos/repa_peony.mp4" autoplay loop muted playsinline></video>
       <figcaption></figcaption>
     </figure>
   </div>
@@ -182,7 +182,7 @@ We show some representative examples here (with their conditioning keyframe).
 
 <figure style="max-width: 960px; margin: 0 auto; text-align: center;">
   <video
-    src="/assets/videos/output_cropped.mp4"
+    src="assets/videos/output_cropped.mp4"
     autoplay
     muted
     loop
