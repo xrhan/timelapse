@@ -143,11 +143,11 @@ There are sudden appearance shifts,  with abrupt, irrelevant substitutions, even
   <h3>Failure case 1. Limited <span style="color:#FFB703;">Shape Dynamics (SD)</span></h3>
   <div class="two-vids">
     <figure>
-      <video src="/assets/videos/consistI2V.mp4" autoplay loop muted playsinline></video>
+      <video src="assets/videos/consistI2V.mp4" autoplay loop muted playsinline></video>
       <figcaption>ConsistI2V</figcaption>
     </figure>
     <figure>
-      <video src="/assets/videos/hunyuan_peony.mp4" autoplay loop muted playsinline></video>
+      <video src="assets/videos/hunyuan_peony.mp4" autoplay loop muted playsinline></video>
       <figcaption>Hunyuan Video</figcaption>
     </figure>
   </div>
@@ -157,11 +157,11 @@ There are sudden appearance shifts,  with abrupt, irrelevant substitutions, even
   <h3>Failure case 2. Lack of <span style="color:#8ECAE6;">Subject Consistency (SC)</span></h3>
   <div class="two-vids">
     <figure>
-      <video src="/assets/videos/veo3_almond.mp4" autoplay loop muted playsinline></video>
+      <video src="assets/videos/veo3_almond.mp4" autoplay loop muted playsinline></video>
       <figcaption>Veo3</figcaption>
     </figure>
     <figure>
-      <video src="/assets/videos/cog_peony.mp4" autoplay loop muted playsinline></video>
+      <video src="assets/videos/cog_peony.mp4" autoplay loop muted playsinline></video>
       <figcaption>CogVideoX (base)</figcaption>
     </figure>
   </div>
