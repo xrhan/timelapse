@@ -30,8 +30,9 @@ bibliography: 2025-04-28-distill-example.bib
 toc:
   - name: Overview
     subsections:
-    - name: Related Work
-    - name: Dataset
+    - name: How do existing methods fail?
+    - name: Our approach
+  - name: Dataset Curation
   - name: Method
     subsections:
       - name: Backbone
@@ -59,7 +60,20 @@ _styles: >
     font-size: 16px;
   }
 ---
-{% include figure.html path="assets/img/lily_timelapse.png" class="img-fluid" %}
+<figure style="max-width: 960px; margin: 0 auto; text-align: center;">
+  <video
+    src="assets/videos/output_cropped.mp4"
+    autoplay
+    muted
+    loop
+    playsinline
+    style="width:100%; height:auto; display:block; border-radius:0px; background:#000;">
+    Sorry—your browser doesn’t support embedded videos.
+  </video>
+  <figcaption style="margin-top:8px; font-size:0.95rem; color:#666;">
+    Given any conditioning keyframe, our model generates timelapse vidoes while preserving subject consistency and sufficient shape changes.
+  </figcaption>
+</figure>
 
 ## Overview
 Long-range coherence is a key problem in image to video generation. Unlike text-to-video cases, conditioning on an input image imposes the greater challenge of faithfully maintaining image content, often requiring a model to understand semantics and geometry in order to avoid unnatural morphing and sudden substitutions. Advancing long-range coherence to handle hundreds or thousands of frames would unlock new applications in world modeling, simulation, and interactive agents. 
@@ -68,7 +82,7 @@ Some methods aim to extend temporal duration by stitching short clips together--
 
 A potential alternative would be to generate a fast-forward (i.e., timelapse) version of long video as a single clip, and then to use inbetweening and interpolation to create finer temporal details. This approach is becoming more feasible thanks to video generation backbones that can produce clips with around 50--90 frames in a single pass. 
 
-This raises the question: Can existing image-to-video models generate convincing long-horizon content within a single clip? To study this, we focus on generating timelapse videos [ADD EXAMPLE FIGURES], which compress hours or days of change (plant growth, dough proofing, melting, etc.) into seconds. Subject appearance and geometry can evolve substantially during a timelapse video, so success requires the ability to model physically plausible transitions and stable long-horizon dependencies. This makes image-to-timelapse generation a convenient benchmark for improving long-horizon consistency in general. 
+This raises the question: **Can existing image-to-video models generate convincing long-horizon content within a single clip?** To study this, we focus on generating timelapse videos, which compress hours or days of change (plant growth, dough proofing, melting, etc.) into seconds. Subject appearance and geometry can evolve substantially during a timelapse video, so success requires the ability to model physically plausible transitions and stable long-horizon dependencies. This makes image-to-timelapse generation a convenient benchmark for improving long-horizon consistency in general. 
 
 We show that current models often fail when generating timelapse clips, and we introduce an alignment technique that leads to improvements. Our technique is called first-order representation alignment (dREPA), and it builds on the representation alignment scheme of Yu et al.<d-cite key="yu2024representation"></d-cite> and Zhang et al.<d-cite key="zhang2025videorepa"></d-cite>. It is a simple training-time regularizer that improves subject consistency in timelapse videos across a range of artistic and photo-realistic styles. Alignment with dREPA can help generate content that substitutes for the laborious process of capturing real timelapse videos.
 
@@ -78,7 +92,7 @@ There has been relatively little work on generating timelapse videos. The closes
 
 We tested some current image-to-video models on timelapse generation, and we observed two main types of failures:
 
-1. <strong>Lack of shape dynamics</strong>:
+1. <strong>Limited shape dynamics</strong>:
 The generated content is largely static, failing to realize continuous deformations like a blooming flower or rising bread.
 
 2. <strong>Lack of subject consistency</strong>:
@@ -126,7 +140,7 @@ There are sudden appearance shifts,  with abrupt, irrelevant substitutions, even
 </style>
 
 <section class="block">
-  <h3>Failure case 1. Limited <span style="color:#FFB703;">Morphing Degree (MD)</span></h3>
+  <h3>Failure case 1. Limited <span style="color:#FFB703;">Shape Dynamics (SD)</span></h3>
   <div class="two-vids">
     <figure>
       <video src="/assets/videos/consistI2V.mp4" autoplay loop muted playsinline></video>
@@ -154,13 +168,14 @@ There are sudden appearance shifts,  with abrupt, irrelevant substitutions, even
 </section>
 
 <br>
-These failures highlight the core challenge of timelapse (and long-range video) generation: _achieving meaningful progression over time while preserving subject identity and scene layout_.
+
+These failures highlight the core challenge of timelapse (and long-range video) generation: **achieving meaningful progression over time while preserving subject identity and scene layout**.
 
 ### Our approach
 We show that we can improve both the morphing degree and preserve subject consistency with the right training-time regularization, even with limited data. 
 
 <section class="block">
-  <h3>Ours <span style="color:#8ECAE6;">SC&uarr;</span> <span style="color:#FFB703;">MD&uarr;</span></h3>
+  <h3>Ours <span style="color:#8ECAE6;">SC&uarr;</span> <span style="color:#FFB703;">SD&uarr;</span></h3>
   <div class="two-vids">
     <figure>
       <video src="assets/videos/almond.mp4" autoplay loop muted playsinline></video>
@@ -174,77 +189,83 @@ We show that we can improve both the morphing degree and preserve subject consis
 </section>
 
 <br>
-Inspired by REPA~\cite{yu2024representation} and following VideoREPA \cite{zhang2025videorepa}, we introduce a first-order representation alignment (dREPA) objective that enhances the model's ability to learn complex spatio-temporal dynamics. A key advantage of dREPA is that it is only applied as training-time regularization and does not require additional inference overhead.
+Inspired by REPA<d-cite key="yu2024representation"></d-cite> and following VideoREPA<d-cite key="zhang2025videorepa"></d-cite>, we introduce a first-order representation alignment (dREPA) objective that enhances the model's ability to learn complex spatio-temporal dynamics. A key advantage of dREPA is that it is only applied as training-time regularization and does not require additional inference overhead.
 
 Our approach also enjoys reduced reliance on detailed text prompts; a generic description is often sufficient. Furthermore, recognizing that a single image captures just one arbitrary moment in a longer process (like a photo of a plant in its lifecycle), we extend the framework to support \textbf{any-frame} conditioning, allowing video generation to condition from any point in a sequence and improves the morphing degree of the generated videos.
 
-We show some representative examples here (with their conditioning keyframe).
+## Dataset Curation
+Before we train the generation model, we first collect a set of timelapse video data. We curate from two data sources: **1. ChronoMagic-ProH dataset**<d-cite key="yuan2024chronomagic"></d-cite>, which is an open-source dataset consists of all types of timelapse videos (e.g. traffic, game-playing, natural processes). Each video is paired with a VLM-generated detailed caption. **2. an internal dataset from Apple**, which has high-quality videos covering various categories. Each video contains metadata such as keywords, object types and a text description.
 
-<figure style="max-width: 960px; margin: 0 auto; text-align: center;">
-  <video
-    src="assets/videos/output_cropped.mp4"
-    autoplay
-    muted
-    loop
-    playsinline
-    style="width:100%; height:auto; display:block; border-radius:0px; background:#000;">
-    Sorry—your browser doesn’t support embedded videos.
-  </video>
-  <figcaption style="margin-top:8px; font-size:0.95rem; color:#666;">
-    (Ours) Anyframe to timelapse video generation
-  </figcaption>
-</figure>
+Our goal is to filter for timelapse-style content where objects undergo gradual, long-horizon changes, such as plant growth or baking process. We use the following curation pipeline:
 
+**Curation pipeline**
+
+1. *Keyword and metadata filtering* We begin with caption and metadata search to select candidate videos in the plant and food categories that are tagged as timelapse or contain related descriptors.
+2. *Content verification*. For each candidate video, we sample a five-frame snapshot spanning its duration. We then query a multimodal LLM (Gemini-2.5-pro) to verify that the video actually depicts a timelapse-like process, ensuring that the subject remains consistent while undergoing meaningful change.
+<img src="assets/img/vlm_query.png"
+     style="width:99%; max-width:100%; height:auto; display:block; margin:0 auto;">
+
+3. *Deduplication and cleanup*. Near-duplicate and low-quality clips are removed to ensure data quality.
+
+After preprocessing, we are left with around 3.8k unique timelapse videos. From each, we extract subclips at three different time intervals as data augmentation, yielding around 11k short clips in total for training, each with paired text caption.
+
+# Method
 ## Backbone
-Given the limited amount of domain-specific data, we finetune from a pretrained video generation model, CogVideoX-5B-I2V \cite{yang2024cogvideox}. At a high level, the backbone is a latent diffusion transformer consists of 42 multimodal transformer layers, each applying self-attention over a concatenation of video latents and text-prompt latents. During training, the model predicts the clean latent estimate, $\hat{x}_0$ for all frames. (This differs from models that predict noise $\hat{\epsilon}$ or velocity $\hat{v}$, but the objectives are equivalent up to loss reweighting \cite{gao2025diffusionmeetsflow}.)
+Given the limited amount of domain-specific data, we finetune from a pretrained video generation model, CogVideoX-5B-I2V<d-cite key="yang2024cogvideox"></d-cite>. The I2V model conditions on the first frame and produces 49 frames at 480×720 resolution through the diffusion process. It is a latent video diffusion model it uses a 3D causal VAE to compress the spatial dimensions by a factor of 16 and the temporal dimension by a factor of 4 (except for the first frame, which is encoded separately), resulting in hidden latents of shape $13\times 30 \times 45$.
+
+At the latent space, the video generation backbone is a diffusion transformer with 42 multimodal transformer blocks, each applying self-attention over a concatenation of video latents and text-prompt latents. During training, the model predicts the clean latent estimate, $\hat{x}_0$ for all latent frames, which is then later decoded to pixel space videos. Note its training objective differs from common practices that predict noise $\hat{\epsilon}$ or velocity $\hat{v}$, but one can show the objectives are equivalent up to loss reweighting<d-cite key="gao2025diffusionmeetsflow"></d-cite>.
 
 <img src="assets/img/backbone.png"
      alt="Anyframe conditioning"
      style="width:90%; max-width:100%; height:auto; display:block; margin:0 auto;">
 
-CogVideoX-5B-I2V conditions on the first frame and produces 49 frames at 480×720 resolution through the diffusion process. The 3D causal VAE compresses the spatial dimensions by a factor of 16 and the temporal dimension by a factor of 4 (with the first frame exempt from temporal compression).
-
 ## Anyframe Conditioning
-For the backbone model, first-frame conditioning is implemented by passing the conditioning image through the 3D VAE (which supports inputs of either a single frame or $1 + 4N$ frames, for integer $N$). The resulting latent representation of the first frame is then padded with zeros across the remaining 12 latent frames.
+Extending first-frame to *any-frame* conditioning allows the model to generate an entire timelapse from a single image taken at any point in the lifecycle, while preserving a sufficient degree of physical morphing across time. 
+
+The backbone model implements first-frame conditioning by passing the conditioning image through the same 3D VAE used to encode and decode the video latents. The resulting conditioning-latent is then padded with zeros across the remaining 12 latent frames.
 
 <img src="assets/img/anyframe.png"
      alt="Anyframe conditioning"
      style="width:90%; max-width:100%; height:auto; display:block; margin:0 auto;">
 
-To extend this setup to any-frame conditioning and consider the full 49-frame video in pixel space with the $i$-th frame as the conditioning image. We replace the $i$-th frame with the conditioning image and mask all other frames with zero-mean Gaussian noise of variance 0.07. Empirically, we observed that directly masking the remaining frames with zeros leads to poor VAE reconstruction quality, likely because the VAE was not trained under such inputs. By contrast, replacing the unconditioned frames with low-variance Gaussian noise provides more stable reconstructions, allowing us to reuse the pretrained 3D VAE without retraining.
+To extend this setup to anyframe conditioning and suppose we want the conditioning image to appear at the i-th frame, we start with a tensor that has the same shape as the pixel-space video clip ($49\times 480 \times 720$). We insert the the conditioning image as the i-th frame while masking all other frames with zero-mean Gaussian noise of variance 0.07. Empirically, we observed that directly masking the remaining frames with zeros leads to poor VAE reconstruction quality, likely because the VAE was not trained under such inputs. By contrast, replacing the unconditioned frames with low-variance Gaussian noise provides more stable reconstructions, allowing us to reuse the pretrained 3D VAE without retraining.
 
-During training, we randomly select the conditioning frame $i$ and use the corresponding ground-truth frame from the video for conditioning. Additionally, we introduce a \textbf{fallback mechanism}: when the selected conditioning frame is the first frame, the remaining latents are zero-padded. This ensures consistency with the original pretraining setup of CogVideoX-5B-I2V and stabilizes training.
-
-Extending first-frame to \emph{any-frame} conditioning allows the model to generate an entire timelapse from a single image taken at any point in the lifecycle, while preserving a sufficient degree of physical morphing across time. 
+During training, we randomly select the $i$-th frame from the ground truth video as the conditioning frame, and train the diffusion model to predict the entire video. Additionally, we introduce a **fallback mechanism**: when the selected conditioning frame is the first frame, the remaining latents are zero-padded. This ensures consistency with the original pretraining setup of CogVideoX-5B-I2V and stabilizes training.
 
 ## First-order Representation Alignment (dREPA)
 
-### Intuitions
-A critical limitation of existing video diffusion models is their lack of \textit{intra-clip consistency}, as demonstrated in our preliminary experiments. We hypothesize that this limitation could stem from the diffusion loss formulation.
+**Intuitions**
 
-Consider the typical regression-style diffusion loss computes the L2 distance between predicted clean frames and ground-truth frames at each timestep, averaging over spatial locations and across all frames. This formulation primarily penalizes 0th-order pattern and often ignores temporal dynamics.
+As demonstrated in the introduction section, a critical limitation of existing video generation models is the lack of *intra-clip subject consistency*. We hypothesize that this limitation could stem from training loss function.
+
+The typical regression-style diffusion loss computes the L2 distance between predicted clean frames and ground-truth frames at each timestep, averaging over spatial locations and across all frames. This formulation primarily penalizes 0th-order pattern and often ignores temporal dynamics.
 
 A toy 1D example can intuitively illustrate the issue. Consider three signals compared against a ground truth over four frames $f_0$ to $f_3$:
 
-1. A shifted version of the ground truth.
+1. (Line 1) A shifted version of the ground truth.
 
-2. A zigzagging variation around the ground truth.
+2. (Line 2) A zigzagging variation around the ground truth.
 
-3. A partial match for the first two timesteps that diverges thereafter.
+3. (Line 3) A partial match for the first two timesteps that diverges thereafter.
 
-Despite their clear differences in temporal behavior, all three are treated equally under per-timestep aggregated regression loss. In practice, the shifted signal should be preferred because it better preserves the first-order dynamics of the ground truth. This motivates additional loss function that specifically target first-order spatio-temporal pattern.
+<img src="assets/img/1d_vis.png"
+     style="width:70%; max-width:100%; height:auto; display:block; margin:0 auto;">
 
-### Main method
-To capture first-order behavior, we align the spatial-temporal relations of the generative model’s latent features with those extracted from pretrained Vision Foundation Models (VFMs). Inspired by image generation representation alignment (REPA) \cite{yu2024representation} and similar to VideoREPA \cite{zhang2025videorepa}, we propose **dREPA** (derivative REPA), which regularizes pretrained video diffusion models without altering their core architecture.
+Despite their clear differences in temporal behavior, all three are favored equally by the model under per-timestep aggregated regression loss. In practice, the slightly shifted signal (Line 1) should be preferred because it better preserves the first-order dynamics of the ground truth. This motivates additional regularization that specifically target first-order spatio-temporal pattern.
+
+**Main method**
+
+To better learn spatio-temporal dynamics, we align the first-order pattern of the video generative model’s latent features with those extracted from pretrained Vision Foundation Models (VFMs). Inspired by image generation representation alignment (REPA)<d-cite key="yu2024representation"></d-cite> and similar to VideoREPA<d-cite key="zhang2025videorepa"></d-cite>, our **dREPA** (derivative REPA) regularizes the video diffusion model's hidden latents through a projection MLP at training time while keeping the same architecture at inference time.
 
 <img src="assets/img/drepa.png"
      alt="Anyframe conditioning"
      style="width:90%; max-width:100%; height:auto; display:block; margin:0 auto;">
 
+Specifically,
 * From the **pixel-space, ground-truth video**, we extract dense spatio-temporal features using a vision foundation model such as V-JEPA2 or DINO-v3. We then compute patchwise similarities between all spatio-temporal patch pairs $y_i, y_j$ across the $N$ patches with $i \neq j$.
 * For the **generative model**, we apply a lightweight MLP projector that maps the generative model’s latents (at an intermediate DiT block) into the VFM feature space with the same spatio-temporal resolution. We then compute pairwise cosine similarities across all patches $h_i, h_j$.
 
-The alignment loss is computed as the distance between patch-wise similarities:
+The alignment loss is computed as the distance between the patch-wise similarities:
 
 $$
 \mathcal{L}_{\text{repa}}
@@ -252,27 +273,31 @@ $$
 \big( \langle h_i, h_j \rangle - \langle y_i, y_j \rangle \big)^2
 $$
 
-where the features are \(\ell_2\)-normalized when computing the inner products.
+where the features $h_i, h_j, y_i, y_j$ are normalized before computing the inner products. During training, we optimize over the original diffusion loss together with a weighted version of the dREPA loss:
 
-### Practical Considerations and Findings
-Following prior work \cite{zhang2025videorepa}, we align features from layer 17 of the backbone CogVideoX. Through ablations we also find that:
+$$
+\mathcal{L} = \mathcal{L}_{\text{diffusion}} + \lambda \cdot \mathcal{L}_{\text{dREPA}}
+$$
+
+**Practical Considerations and Findings**
+
+Following prior work<d-cite key="zhang2025videorepa"></d-cite>, we align features from layer 17 of the backbone CogVideoX. Finetuning on the timelapse dataset with dREPA takes around 30 hours on 8 H100 GPUs. Through ablations we also find that:
 
 * **Loss function**: Using L2 distance for repa loss yields better generation quality than L1 loss.
-* **Choice of VFM**: V-JEPA2 or per-frame DINO-v3 features outperform VideoMAEv2 features.
-* **Alignment**: Directly aligning 0th-order features (as in standard REPA \cite{yu2024representation}) degrades pretrained models, whereas dREPA’s first-order alignment is more stable.
+* **Choice of VFM**: Aligning with V-JEPA2 or per-frame DINO-v3 features outperform VideoMAEv2 features.
+* **Alignment**: Directly aligning 0th-order features (as in standard REPA<d-cite key="yu2024representation"></d-cite>) hurts pretrained models, whereas dREPA’s first-order alignment is more stable.
 
-
-Also note that the MLP projector is only used during training to compute the alignment loss. At inference, it is removed entirely, leaving the backbone architecture unchanged and incurring no additional runtime cost.
+Note that the MLP projector is only used during training to compute the alignment loss. At inference, it is removed entirely, leaving the backbone architecture unchanged and incurring no additional runtime cost.
 
 ## Experiments
 ### Ablations
-To assess the effectiveness of dREPA, we finetune the CogVideoX-5B-I2V backbone for anyframe conditioning under two settings: 
+To assess the effectiveness of dREPA, we finetune the CogVideoX-5B-I2V backbone for anyframe conditioning with the curated timelapse dataset under two settings: 
 
 1. Without dREPA (baseline finetuning)
 
 2. With dREPA (our proposed method)
 
-Both settings use identical random seeds, training iterations, and inference conditions. For fair comparison, we fix the same initial noise and random seeds during generation.
+Both training settings use identical random seeds and learning hyperparameters. At inference time, we compare sampled videos generated with the same conditioning frame and random seeds to evaluate the effect of dREPA regularization. 
 
 When trained without dREPA, the model frequently produces discontinuities in a single generated clip—for example, sudden introduction of new content, as seen in the tulip case. In contrast, finetuning with dREPA leads to temporally smoother sequences with more physically realistic morphing behavior.
 
@@ -328,7 +353,7 @@ When trained without dREPA, the model frequently produces discontinuities in a s
       <!-- Left column: finetuning only -->
       <figure>
         <video muted autoplay loop playsinline preload="metadata"
-               src="/assets/videos/{{ left }}"></video>
+               src="assets/videos/{{ left }}"></video>
         <!-- Optional per-video caption; remove if not needed -->
         <!-- <figcaption>video {{ forloop.index }} (finetuning only)</figcaption> -->
       </figure>
@@ -336,7 +361,7 @@ When trained without dREPA, the model frequently produces discontinuities in a s
       <!-- Right column: + REPA -->
       <figure>
         <video muted autoplay loop playsinline preload="metadata"
-               src="/assets/videos/{{ right }}"></video>
+               src="assets/videos/{{ right }}"></video>
         <!-- <figcaption>video {{ forloop.index }} (+ REPA)</figcaption> -->
       </figure>
     {% endfor %}
@@ -345,7 +370,7 @@ When trained without dREPA, the model frequently produces discontinuities in a s
 
 ### Comparison
 
-The benefits of dREPA are especially pronounced for out-of-distribution inputs such as paintings. Although the model never observes artistic paintings during training, dREPA-regularized models generalize well, producing consistent and realistic blooming sequences from, e.g., sunflower oil paintings. On these artistic domains, our approach even surpasses several closed-source commercial models (e.g., Google Veo3, Runway Gen4) in terms of subject consistency and faithful preservation of the painting texture.
+The benefits of dREPA are especially pronounced for out-of-distribution inputs such as paintings. Although the model never observes painting-style timelapse during training, dREPA-regularized models generalize well, producing consistent and realistic blooming sequences from, e.g., sunflower oil paintings. On these artistic domains, our approach even surpasses several closed-source commercial models (e.g., Google Veo3, Runway Gen4) in terms of subject consistency and faithful preservation of the painting texture.
 
 <!-- ===== 2 rows × 3 columns comparison grid ===== -->
 <style>
@@ -381,37 +406,39 @@ The benefits of dREPA are especially pronounced for out-of-distribution inputs s
     <!-- Row 1 -->
     <figure>
       <video muted autoplay loop playsinline preload="metadata"
-             src="/assets/videos/veo3_sunflower.mp4"></video>
+             src="assets/videos/veo3_sunflower.mp4"></video>
     </figure>
     <figure>
       <video muted autoplay loop playsinline preload="metadata"
-             src="/assets/videos/gen4_sunflower.mp4"></video>
+             src="assets/videos/gen4_sunflower.mp4"></video>
     </figure>
     <figure>
       <video muted autoplay loop playsinline preload="metadata"
-             src="/assets/videos/repa_sunflower.mp4"></video>
+             src="assets/videos/repa_sunflower.mp4"></video>
     </figure>
 
     <!-- Row 2 -->
     <figure>
       <video muted autoplay loop playsinline preload="metadata"
-             src="/assets/videos/veo3_monet.mp4"></video>
+             src="assets/videos/veo3_monet.mp4"></video>
     </figure>
     <figure>
       <video muted autoplay loop playsinline preload="metadata"
-             src="/assets/videos/gen4_monet.mp4"></video>
+             src="assets/videos/gen4_monet.mp4"></video>
     </figure>
     <figure>
       <video muted autoplay loop playsinline preload="metadata"
-             src="/assets/videos/repa_monet.mp4"></video>
+             src="assets/videos/repa_monet.mp4"></video>
     </figure>
   </div>
 </div>
 <!-- ===== End comparison grid ===== -->
 
-### More results with REPA
+### More results with dREPA
 
-Our model works seamlessly on diverse input sources, including iPhone-captured photos and online images. Conditioning can be applied at arbitrary frames, from which we generate the entire timelapse sequence.
+- Our model works seamlessly on diverse input sources, including iPhone-captured photos and online images. Conditioning can be applied at arbitrary frames, from which we generate the entire timelapse sequence.
+- We also find that additional camera control prompts can be integrated, opening opportunities for user-directed content generation. 
+- Since our training data also contains baking timelapses, the model can generate those as well.
 
 <style>
   .vid-row-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:4px 0 16px; }
@@ -426,15 +453,15 @@ Our model works seamlessly on diverse input sources, including iPhone-captured p
 <div class="vid-row-3">
   <figure>
     <video muted autoplay loop playsinline preload="metadata"
-           src="/assets/videos/photo30.mp4"></video>
+           src="assets/videos/photo30.mp4"></video>
   </figure>
   <figure>
     <video muted autoplay loop playsinline preload="metadata"
-           src="/assets/videos/photo24.mp4"></video>
+           src="assets/videos/photo24.mp4"></video>
   </figure>
   <figure>
     <video muted autoplay loop playsinline preload="metadata"
-           src="/assets/videos/photo8.mp4"></video>
+           src="assets/videos/photo8.mp4"></video>
   </figure>
 </div>
 
@@ -442,15 +469,15 @@ Our model works seamlessly on diverse input sources, including iPhone-captured p
 <div class="vid-row-3">
   <figure>
     <video muted autoplay loop playsinline preload="metadata"
-           src="/assets/videos/cherry_tree.mp4"></video>
+           src="assets/videos/cherry_tree.mp4"></video>
   </figure>
   <figure>
     <video muted autoplay loop playsinline preload="metadata"
-           src="/assets/videos/anemone.mp4"></video>
+           src="assets/videos/anemone.mp4"></video>
   </figure>
   <figure>
     <video muted autoplay loop playsinline preload="metadata"
-           src="/assets/videos/carnation.mp4"></video>
+           src="assets/videos/carnation.mp4"></video>
   </figure>
 </div>
 
@@ -458,15 +485,15 @@ Our model works seamlessly on diverse input sources, including iPhone-captured p
 <div class="vid-row-3">
   <figure>
     <video muted autoplay loop playsinline preload="metadata"
-           src="/assets/videos/camera_rotation.mp4"></video>
+           src="assets/videos/camera_rotation.mp4"></video>
   </figure>
   <figure>
     <video muted autoplay loop playsinline preload="metadata"
-           src="/assets/videos/Cherry_zoomin.mp4"></video>
+           src="assets/videos/Cherry_zoomin.mp4"></video>
   </figure>
   <figure>
     <video muted autoplay loop playsinline preload="metadata"
-           src="/assets/videos/zoomin1.mp4"></video>
+           src="assets/videos/zoomin1.mp4"></video>
   </figure>
 </div>
 
@@ -475,15 +502,15 @@ Our model works seamlessly on diverse input sources, including iPhone-captured p
 <div class="vid-row-3">
   <figure>
     <video muted autoplay loop playsinline preload="metadata"
-           src="/assets/videos/bake2.mp4"></video>
+           src="assets/videos/bake2.mp4"></video>
   </figure>
   <figure>
     <video muted autoplay loop playsinline preload="metadata"
-           src="/assets/videos/bake7.mp4"></video>
+           src="assets/videos/bake7.mp4"></video>
   </figure>
   <figure>
     <video muted autoplay loop playsinline preload="metadata"
-           src="/assets/videos/bake4.mp4"></video>
+           src="assets/videos/bake4.mp4"></video>
   </figure>
 </div>
 
@@ -503,42 +530,42 @@ Beyond real photos, the model generalizes well to different artistic styles and 
 <div class="video-grid">
   <figure>
     <video muted autoplay loop playsinline preload="metadata"
-      src="/assets/videos/ghibli1.mp4"></video>
+      src="assets/videos/ghibli1.mp4"></video>
     <figcaption>Studio Ghibli</figcaption>
   </figure>
   <figure>
     <video muted autoplay loop playsinline preload="metadata"
-      src="/assets/videos/flower1.mp4"></video>
+      src="assets/videos/flower1.mp4"></video>
     <figcaption>Yun Lanxi, Flower Painting (Qing Dynasty)</figcaption>
   </figure>
   <figure>
     <video muted autoplay loop playsinline preload="metadata"
-      src="/assets/videos/asawa2.mp4"></video>
+      src="assets/videos/asawa2.mp4"></video>
     <figcaption>Ruth Asawa, Flowers VII (1965)</figcaption>
   </figure>
   <figure>
     <video muted autoplay loop playsinline preload="metadata"
-      src="/assets/videos/met5.mp4"></video>
+      src="assets/videos/met5.mp4"></video>
     <figcaption>Henri Fantin-Latour, Roses and Lilies (1888)</figcaption>
   </figure>
     <figure>
     <video muted autoplay loop playsinline preload="metadata"
-      src="/assets/videos/sanyu1.mp4"></video>
+      src="assets/videos/sanyu1.mp4"></video>
     <figcaption>Sanyu, Chrysanthemums (1950s)</figcaption>
   </figure>
   <figure>
     <video muted autoplay loop playsinline preload="metadata"
-      src="/assets/videos/almond.mp4"></video>
+      src="assets/videos/almond.mp4"></video>
     <figcaption>Vincent van Gogh, Almond Blossom (1890)</figcaption>
   </figure>
   <figure>
     <video muted autoplay loop playsinline preload="metadata"
-      src="/assets/videos/matisse.mp4"></video>
+      src="assets/videos/matisse.mp4"></video>
     <figcaption>Henri Matisse, Anemones in Vase (1924)</figcaption>
   </figure>
   <figure>
     <video muted autoplay loop playsinline preload="metadata"
-      src="/assets/videos/dali_rose.mp4"></video>
+      src="assets/videos/dali_rose.mp4"></video>
     <figcaption>Salvador Dali, Meditative Rose (1958)</figcaption>
   </figure>
 </div>
@@ -554,47 +581,75 @@ Despite these improvements, the model still exhibits some limitations:
 <div class="vid-row-3">
   <figure>
     <video muted autoplay loop playsinline preload="metadata"
-           src="/assets/videos/ghibli3_bg.mp4"></video>
+           src="assets/videos/ghibli3_bg.mp4"></video>
   </figure>
   <figure>
     <video muted autoplay loop playsinline preload="metadata"
-           src="/assets/videos/photo1_bg.mp4"></video>
+           src="assets/videos/photo1_bg.mp4"></video>
     <figcaption>Some failure cases</figcaption>
   </figure>
   <figure>
     <video muted autoplay loop playsinline preload="metadata"
-           src="/assets/videos/photo17_bg.mp4"></video>
+           src="assets/videos/photo17_bg.mp4"></video>
   </figure>
 </div>
 
 For future work, we aim to extend the conditioning mechanism to multiple keyframes, enabling users to provide sparse temporal anchors from which the model can interpolate the full timelapse sequence.
 
 ## Takeaways
-In this blog, we explored how to extend CogVideoX-5B-I2V for any-frame conditioning and introduced dREPA, a lightweight alignment strategy that improves temporal consistency in video diffusion models. Our key findings are:
+Our key findings are:
 
-1. Existing first-frame conditioning I2V models can be easily **extended to any-frame conditioning**, enabling generation from arbitrary starting points.
+1. Existing first-frame conditioning I2V models can be easily **extended to any-frame conditioning**, enabling generation from arbitrary points in time.
 
-2. **dREPA regularization** improves subject consistency and the physical realism of temporal dynamics with limited finetuning data.
+2. **dREPA regularization** can improve subject consistency and the physical realism of temporal dynamics with limited finetuning data.
 
-3. The method **generalizes beyond training data**, producing high-quality results on different artistic styles and out-of-distribution domains.
+3. dREPA **generalizes well beyond training data**, producing high-quality results from images that are out-of-distribution, such as artistic styles.
 
-Overall, dREPA shows the value of aligning **first-order spatiotemporal representations** rather than relying solely on framewise losses. This opens the door to more controllable, physically consistent video generation systems, with applications from physics-grounded modeling ("world models") to digital art.
+Overall, dREPA highlights the benefit of aligning first-order spatial-temporal representations rather than relying solely on framewise losses. We believe this direction opens the door to more controllable, physically realistic video generation systems, with applications ranging from world modeling to digital art.
 
-## Appendix - Dataset Curation
-Our training dataset consists of a mixture of the open-source ChronoMagic-ProH dataset \cite{yuan2024chronomagic} and an internal dataset from Apple. Our goal is to curate timelapse-style content where objects undergo gradual, long-horizon changes, such as plant growth or baking process.
+## Appendix - Implementation
+Pytorch code for dREPA loss.
 
-**Curation pipeline**
+```python
+def dREPA_loss(
+    yv: Tensor,      # [B, f, hw, D]  foundation-model features
+    h:  Tensor,      # [B, f, hw, D]  generation-model features
+    reshape = True,
+) -> Tensor:
 
-1. *Keyword and metadata filtering* We begin with caption and metadata search to select candidate videos in the plant and food categories that are tagged as timelapse or contain related descriptors.
-2. *Content verification*. For each candidate video, we sample a five-frame snapshot spanning its duration. We then query a multimodal LLM (e.g., Gemini-2.5-pro) to verify that the video actually depicts a timelapse-like process, ensuring that the subject remains consistent while undergoing meaningful change.
-3. *Deduplication and cleanup*. Near-duplicate and low-quality clips are removed to ensure data quality.
+    if reshape:
+        yv = rearrange(yv, 'B F C H W -> B F (H W) C')
+        h  = rearrange(h,  'B F C H W -> B F (H W) C')
 
-**Final corpus**: After preprocessing, we collect around 3.8k unique timelapse videos. From each, we extract subclips at three different time intervals, yielding around 11k short clips in total for training, each with paired text caption.
+    B, f, hw, D = yv.shape
+    device = yv.device
 
+    # 1) Normalize features along D
+    yv_norm = F.normalize(yv, p=2, dim=-1)  # [B, f, hw, D]
+    h_norm  = F.normalize(h,  p=2, dim=-1)
 
-## Acknowledgements
+    # 2) Spatial similarities per frame
+    y_spatial = torch.einsum('bfid,bfjd->bfij', yv_norm, yv_norm)
+    h_spatial = torch.einsum('bfid,bfjd->bfij', h_norm,  h_norm)
+    L_spatial = (h_spatial - y_spatial).pow(2).mean()
 
-We thank Todd Zickler for helpful discussions.
+    # 3) Full cross-frame similarities
+    y_temp = torch.einsum('bfid,bgjd->bfgij', yv_norm, yv_norm)
+    h_temp = torch.einsum('bfid,bgjd->bfgij', h_norm,  h_norm)
+    diff_temp = (h_temp - y_temp).pow(2)
+
+    # 4) Mask out same-frame pairs (keep only e != d)
+    diag = torch.eye(f, dtype=torch.bool, device=device)
+    mask = ~diag
+
+    # 5) Expand mask to match diff_temp
+    mask = mask.view(1, f, f, 1, 1).expand(B, f, f, hw, hw)
+
+    # 6) Apply mask & mean
+    L_temporal = diff_temp[mask].mean()
+
+    return L_spatial + L_temporal
+```
 
 
 
