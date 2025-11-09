@@ -31,11 +31,11 @@
               title.split(" ").slice(0, 3).join("")
       ).replace(" ", "").replace(/[\p{P}$+<=>^`|~]/gu, '').toLowerCase().trim();
       let bibtexTemplate = `
-@inproceedings{${bibtexTitleShorthand},
-  author = {${authorsBibtex}},
+@inproceedings{han2025timelapse,
+  author = {Han, Xinran Nicole and Mendieta, Matias and Falahatgar, Moein},
   title = {${title}},
-  year = {2024},
-  url  = {${window.location.href}}
+  year = {2025},
+  url  = {https://xrhan.github.io/timelapse/}
 }
   `.trim();
       document.getElementById("bibtex-box").innerText = bibtexTemplate;

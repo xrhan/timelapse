@@ -11,7 +11,7 @@ hidden: false
 # Anonymize when submitting
 
 authors:
-  - name: Xinran Nicole Han<sup>1,2</sup>
+  - name: Xinran Nicole Han<sup>1</sup>
     url: "https://xrhan.github.io/"
     affiliations:
       name: 1.Harvard University
@@ -39,6 +39,8 @@ toc:
       - name: Anyframe Conditioning
       - name: First-order Representation Alignment (dREPA)
   - name: Experiments
+    subsections:
+      - name: Generalization to different artistic styles
   - name: Takeaways
 
 # Below is an example of injecting additional post-specific styles.
@@ -47,8 +49,8 @@ toc:
 _styles: >
   .fake-img {
     background: #bbb;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    box-shadow: 0 0px 4px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 1);
+    box-shadow: 0 0px 4px rgba(255, 255, 255, 1);
     margin-bottom: 12px;
   }
   .fake-img p {
@@ -290,7 +292,7 @@ Following prior work<d-cite key="zhang2025videorepa"></d-cite>, we align feature
 Note that the MLP projector is only used during training to compute the alignment loss. At inference, it is removed entirely, leaving the backbone architecture unchanged and incurring no additional runtime cost.
 
 ## Experiments
-### Ablations
+<h3 style="margin:0.5rem 0 0.45rem;">Ablations</h3>
 To assess the effectiveness of dREPA, we finetune the CogVideoX-5B-I2V backbone for anyframe conditioning with the curated timelapse dataset under two settings: 
 
 1. Without dREPA (baseline finetuning)
@@ -316,8 +318,8 @@ When trained without dREPA, the model frequently produces discontinuities in a s
   }
   .ablations-grid figure { margin: 0; }
   .ablations-grid video {
-    width: 100%; height: auto; display: block;
-    border-radius: 8px; background: #000;
+    width: 100%; height: auto; display: block; max-height: 240px;
+    border-radius: 8px; background: #ffffffff;
   }
   .ablations-grid figcaption {
     text-align: center; font-size: 0.9rem; color: #666; margin-top: 4px;
@@ -341,7 +343,7 @@ When trained without dREPA, the model frequently produces discontinuities in a s
     ft_row2:norepa_lotus.mp4,repa_lotus.mp4|
     ft_row3:norepa_jasmine.mp4,repa_jasmine.mp4|
     ft_row4:norepa_flowers.mp4,repa_flowers.mp4|
-    ft_row5:norepa_sunflower.mp4,repa_sunflower.mp4
+    ft_row5:norepa_sunflower_out.mp4,repa_sunflower_out.mp4
   " | strip | replace: ' ', '' | split: "|" %}
 
   <div class="ablations-grid">
@@ -384,7 +386,7 @@ The benefits of dREPA are especially pronounced for out-of-distribution inputs s
   }
   .cmp-grid figure { margin: 0; }
   .cmp-grid video {
-    width: 100%; height: auto; display: block;
+    width: 100%; height: auto; display: block; max-height: 180px;
     border-radius: 8px; background: #000;
   }
   @media (max-width: 900px) {
@@ -406,7 +408,7 @@ The benefits of dREPA are especially pronounced for out-of-distribution inputs s
     <!-- Row 1 -->
     <figure>
       <video muted autoplay loop playsinline preload="metadata"
-             src="assets/videos/veo3_sunflower.mp4"></video>
+             src="assets/videos/veo3_sunflower_cut.mp4"></video>
     </figure>
     <figure>
       <video muted autoplay loop playsinline preload="metadata"
@@ -414,7 +416,7 @@ The benefits of dREPA are especially pronounced for out-of-distribution inputs s
     </figure>
     <figure>
       <video muted autoplay loop playsinline preload="metadata"
-             src="assets/videos/repa_sunflower.mp4"></video>
+             src="assets/videos/repa_sunflower_out.mp4"></video>
     </figure>
 
     <!-- Row 2 -->
@@ -428,7 +430,7 @@ The benefits of dREPA are especially pronounced for out-of-distribution inputs s
     </figure>
     <figure>
       <video muted autoplay loop playsinline preload="metadata"
-             src="assets/videos/repa_monet.mp4"></video>
+             src="assets/videos/repa_monet_out_406.mp4"></video>
     </figure>
   </div>
 </div>
