@@ -325,7 +325,7 @@ When trained without dREPA, the model frequently produces discontinuities in a s
 <div class="ablations-wrap">
   <div class="ablations-header">
     <div>finetuning only</div>
-    <div>+ REPA</div>
+    <div>+ dREPA</div>
   </div>
 
   <!-- Define your 4 rows (left = finetuning, right = +REPA). 
