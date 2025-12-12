@@ -262,7 +262,7 @@ For the spatio-temporal pattern of the video generation model, we apply a lightw
 The alignment loss is then computed as the distance between the pairwise patch similarities of the generation model and the VFM features:
 
 $$
-\mathcal{L}_{\text{repa}}
+\mathcal{L}_{\text{dREPA}}
 = \frac{1}{N(N-1)} \sum_{i \ne j}
 \big( \langle h_i, h_j \rangle - \langle y_i, y_j \rangle \big)^2
 $$
