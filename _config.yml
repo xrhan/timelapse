@@ -2,7 +2,7 @@
 # Site settings
 # -----------------------------------------------------------------------------
 
-title: Anyframe to Timelapse Video Generation # the website title (if blank, full name will be used instead)
+title: Anyframe to Timelapse Video Generation with Derivative Representation Alignment (dREPA) # the website title (if blank, full name will be used instead)
 first_name:
 middle_name: 
 last_name:
